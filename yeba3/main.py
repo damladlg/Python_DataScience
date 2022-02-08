@@ -2,9 +2,10 @@ import requests
 from urllib.parse import unquote
 import json
 import psycopg2
-from datetime import datetime
+from datetime import datetime, timedelta
 import schedule
 import time
+from requests.exceptions import HTTPError
 
 def request_to_url(start_date,end_date):
     parameters = {
@@ -15,19 +16,26 @@ def request_to_url(start_date,end_date):
     payload = {}
     headers= {}
     url="https://api.ibb.gov.tr/havakalitesi/OpenDataPortalHandler/GetAQIByStationId"
-
-    istek = requests.get(url, params = parameters)
-    if istek.status_code == 200:
-        decodeUrl = unquote(istek.url) #invalid degerlerden dolayi url decode ediliyor.
-        response = requests.get(decodeUrl,headers=headers, data = payload)
-        result = json.loads(response.text) 
-        print("İstek basariyla atildi. Json veriler cekildi.")
-        return result
-    else:
-        print("İstek karsilanamadi.")
     
-start_date="07.02.2022%2016:00:00"
-end_date="07.02.2022%2017:00:00"      
+    try:
+        istek = requests.get(url, params = parameters)
+        if istek.status_code == 200:
+            decodeUrl = unquote(istek.url) #invalid degerlerden dolayi url decode ediliyor.
+            response = requests.get(decodeUrl,headers=headers, data = payload)
+            result = json.loads(response.text) 
+            print("İstek basariyla atildi. Json veriler cekildi.")
+            return result
+        else:
+            print("İstek karsilanamadi.")
+
+    except HTTPError as http_err:
+        print(f'HTTP error occurred: {http_err}')
+    except Exception as err:
+        print(f'Other error occurred: {err}')
+        
+        
+start_date="08.02.2022%2007:00:00"
+end_date="08.02.2022%2008:00:00"      
 insert_data=request_to_url(start_date,end_date)
 
 database_name="postgres"
@@ -95,27 +103,27 @@ for i in insert_data:
     cursor.execute(query_insert_table, record_to_insert)
 
 def job():
-    print("job")
     record_to_insert_hourly = tuple()
     now = datetime.now()
+    one_hour_ago=datetime.now() - timedelta(hours = 1)
     date_string = now.strftime("%d.%m.%Y")
     time_string = now.strftime("%H:00:00")
-    start_date=date_string+"%20"+time_string
+    time_string_one_hour_ago=one_hour_ago.strftime("%H:00:00")
+    if time_string=="00:00:00": #00:00 da 1 saat öncesini alınca day değeri bir önceki gün olması gerektiği için, yoksa yeni günün day ını alıyor
+        one_day_ago=datetime.now() - timedelta(days = 1)
+        start_date=one_day_ago+"%20"+time_string_one_hour_ago
+    else:
+        start_date=date_string+"%20"+time_string_one_hour_ago
     end_date=date_string+"%20"+time_string
     
     hourly_result=request_to_url(start_date,end_date)
     
-    print(hourly_result)
-     
     query_select_lastrow="""SELECT ReadTime FROM hava_kalitesi
     ORDER BY id DESC
     LIMIT 1"""
     cursor.execute(query_select_lastrow)
     last_row=cursor.fetchone()
-    print("last row")
-    print(last_row)
     current_hour="('"+hourly_result[0]['ReadTime']+"',)" 
-    print(current_hour)
     last_row=str(last_row)
     if last_row==current_hour:
         print("Bu veri eklenmis.")
@@ -126,6 +134,7 @@ def job():
                             hourly_result[0]['AQI']['O3'], hourly_result[0]['AQI']['NO2'],hourly_result[0]['AQI']['CO'], hourly_result[0]['AQI']['AQIIndex'], hourly_result[0]['AQI']['ContaminantParameter'],
                             hourly_result[0]['AQI']['State'],hourly_result[0]['AQI']['Color'])
         cursor.execute(query_insert_table_hourly, record_to_insert_hourly)
+        print("Son veri veri tabanina yazildi.")
         
     hourly_result.clear()
 
@@ -134,4 +143,3 @@ schedule.every().hour.do(job)
 while True:
     schedule.run_pending()
     time.sleep(1)
-    
