@@ -34,8 +34,8 @@ def request_to_url(start_date,end_date):
         print(f'Other error occurred: {err}')
         
         
-start_date="08.02.2022%2007:00:00"
-end_date="08.02.2022%2008:00:00"      
+start_date="09.02.2022%2022:00:00"
+end_date="09.02.2022%2023:00:00"      
 insert_data=request_to_url(start_date,end_date)
 
 database_name="postgres"
@@ -103,20 +103,29 @@ for i in insert_data:
     cursor.execute(query_insert_table, record_to_insert)
 
 def job():
+    print("joba girdi.")
     record_to_insert_hourly = tuple()
     now = datetime.now()
     one_hour_ago=datetime.now() - timedelta(hours = 1)
     date_string = now.strftime("%d.%m.%Y")
     time_string = now.strftime("%H:00:00")
+    print(time_string)
     time_string_one_hour_ago=one_hour_ago.strftime("%H:00:00")
     if time_string=="00:00:00": #00:00 da 1 saat öncesini alınca day değeri bir önceki gün olması gerektiği için, yoksa yeni günün day ını alıyor
-        one_day_ago=datetime.now() - timedelta(days = 1)
+        one_day_ago=(datetime.now() - timedelta(days = 1)).strftime("%d.%m.%Y")
+        print(one_day_ago)
         start_date=one_day_ago+"%20"+time_string_one_hour_ago
+        print("yeni start")
+        print(start_date)
     else:
         start_date=date_string+"%20"+time_string_one_hour_ago
     end_date=date_string+"%20"+time_string
     
+    print(start_date)
+    print(end_date)
     hourly_result=request_to_url(start_date,end_date)
+    
+    print(hourly_result)
     
     query_select_lastrow="""SELECT ReadTime FROM hava_kalitesi
     ORDER BY id DESC
