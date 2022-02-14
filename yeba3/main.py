@@ -29,18 +29,18 @@ def request_to_url(start_date,end_date):
             print("İstek karsilanamadi.")
 
     except HTTPError as http_err:
-        print(f'HTTP error occurred: {http_err}')
+        print('HTTP error occurred: {http_err}')
     except Exception as err:
-        print(f'Other error occurred: {err}')
+        print('Other error occurred: {err}')
         
         
-start_date="11.02.2022%2022:00:00"
-end_date="11.02.2022%2023:00:00"      
+start_date="01.02.2022%2000:00:00"
+end_date="02.02.2022%2000:00:00"      
 insert_data=request_to_url(start_date,end_date)
 
 database_name="postgres"
 user_name="postgres"
-password="****"
+password=****
 host_ip="127.0.0.1"
 host_port="5432"
 
@@ -55,11 +55,11 @@ cursor=db.cursor()
 
 cursor.execute("SELECT datname FROM pg_database;")
 list_database = cursor.fetchall()
-database_name = "yeba_db"
+database_name = "yhk_db"
 if (database_name,) in list_database:
     print("'{}' veri tabanı zaten mevcut. Mevcut olan kullaniliyor.".format(database_name))
 else:
-    query_create_database = "CREATE DATABASE yeba_db"
+    query_create_database = "CREATE DATABASE yhk_db"
     cursor.execute(query_create_database)
     print("Veri tabani olusturuldu.")
     
@@ -94,49 +94,56 @@ db.autocommit=True
 cursor=db.cursor()
 cursor.execute(query_create_table)
 
-for i in insert_data:
-    query_insert_table="""INSERT into hava_kalitesi(ReadTime, Concentration_PM10, Concentration_SO2, Concentration_O3, Concentration_NO2, Concentration_CO, AQI_PM10, AQI_SO2, AQI_O3, AQI_NO2, AQI_CO, AQI_AQIIndex, AQI_ContaminantParameter, AQI_State, AQI_Color) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
-    record_to_insert = (i['ReadTime'], i['Concentration']['PM10'], i['Concentration']['SO2'],i['Concentration']['O3'],
-                        i['Concentration']['NO2'],i['Concentration']['CO'],i['AQI']['PM10'],i['AQI']['SO2'],
-                        i['AQI']['O3'], i['AQI']['NO2'],i['AQI']['CO'], i['AQI']['AQIIndex'], i['AQI']['ContaminantParameter'],
-                        i['AQI']['State'],i['AQI']['Color'])
-    cursor.execute(query_insert_table, record_to_insert)
+try:
+    for i in insert_data:
+        if i['AQI'] is not None:
+            query_insert_table="""INSERT into hava_kalitesi(ReadTime, Concentration_PM10, Concentration_SO2, Concentration_O3, Concentration_NO2, Concentration_CO, AQI_PM10, AQI_SO2, AQI_O3, AQI_NO2, AQI_CO, AQI_AQIIndex, AQI_ContaminantParameter, AQI_State, AQI_Color) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
+            record_to_insert = (i['ReadTime'], i['Concentration']['PM10'], i['Concentration']['SO2'],i['Concentration']['O3'],
+                                i['Concentration']['NO2'],i['Concentration']['CO'],i['AQI']['PM10'],i['AQI']['SO2'],
+                                i['AQI']['O3'], i['AQI']['NO2'],i['AQI']['CO'], i['AQI']['AQIIndex'], i['AQI']['ContaminantParameter'],
+                                i['AQI']['State'],i['AQI']['Color'])
+            cursor.execute(query_insert_table, record_to_insert)
+except Exception as e:
+    print ("TOPLU VERI AKTARIMI SIRASINDA HATA: " + str(e))
 
 def job():
-    record_to_insert_hourly = tuple()
-    now = datetime.now()
-    one_hour_ago=datetime.now() - timedelta(hours = 1)
-    date_string = now.strftime("%d.%m.%Y")
-    time_string = now.strftime("%H:00:00")
-    time_string_one_hour_ago=one_hour_ago.strftime("%H:00:00")
-    if time_string=="00:00:00": #00:00 da 1 saat öncesini alınca day değeri bir önceki gün olması gerektiği için, yoksa yeni günün day ını alıyor
-        one_day_ago=(datetime.now() - timedelta(days = 1)).strftime("%d.%m.%Y")
-        start_date=one_day_ago+"%20"+time_string_one_hour_ago
-    else:
-        start_date=date_string+"%20"+time_string_one_hour_ago
-    end_date=date_string+"%20"+time_string
-    
-    hourly_result=request_to_url(start_date,end_date)
-    
-    query_select_lastrow="""SELECT ReadTime FROM hava_kalitesi
-    ORDER BY id DESC
-    LIMIT 1"""
-    cursor.execute(query_select_lastrow)
-    last_row=cursor.fetchone()
-    current_hour="('"+hourly_result[0]['ReadTime']+"',)" 
-    last_row=str(last_row)
-    if last_row==current_hour:
-        print("Bu veri eklenmis.")
-    else:
-        query_insert_table_hourly="""INSERT into hava_kalitesi(ReadTime, Concentration_PM10, Concentration_SO2, Concentration_O3, Concentration_NO2, Concentration_CO, AQI_PM10, AQI_SO2, AQI_O3, AQI_NO2, AQI_CO, AQI_AQIIndex, AQI_ContaminantParameter, AQI_State, AQI_Color) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
-        record_to_insert_hourly = (hourly_result[0]['ReadTime'], hourly_result[0]['Concentration']['PM10'], hourly_result[0]['Concentration']['SO2'],hourly_result[0]['Concentration']['O3'],
-                            hourly_result[0]['Concentration']['NO2'],hourly_result[0]['Concentration']['CO'],hourly_result[0]['AQI']['PM10'],hourly_result[0]['AQI']['SO2'],
-                            hourly_result[0]['AQI']['O3'], hourly_result[0]['AQI']['NO2'],hourly_result[0]['AQI']['CO'], hourly_result[0]['AQI']['AQIIndex'], hourly_result[0]['AQI']['ContaminantParameter'],
-                            hourly_result[0]['AQI']['State'],hourly_result[0]['AQI']['Color'])
-        cursor.execute(query_insert_table_hourly, record_to_insert_hourly)
-        print("Son veri veri tabanina yazildi.")
+    try:
+        record_to_insert_hourly = tuple()
+        now = datetime.now()
+        one_hour_ago=datetime.now() - timedelta(hours = 1)
+        date_string = now.strftime("%d.%m.%Y")
+        time_string = now.strftime("%H:00:00")
+        time_string_one_hour_ago=one_hour_ago.strftime("%H:00:00")
+        if time_string=="00:00:00": #00:00 da 1 saat öncesini alınca day değeri bir önceki gün olması gerektiği için, yoksa yeni günün day ını alıyor
+            one_day_ago=(datetime.now() - timedelta(days = 1)).strftime("%d.%m.%Y")
+            start_date=one_day_ago+"%20"+time_string_one_hour_ago
+        else:
+            start_date=date_string+"%20"+time_string_one_hour_ago
+        end_date=date_string+"%20"+time_string
         
-    hourly_result.clear()
+        hourly_result=request_to_url(start_date,end_date)
+        
+        query_select_lastrow="""SELECT ReadTime FROM hava_kalitesi
+        ORDER BY id DESC
+        LIMIT 1"""
+        cursor.execute(query_select_lastrow)
+        last_row=cursor.fetchone()
+        current_hour="('"+hourly_result[0]['ReadTime']+"',)" 
+        last_row=str(last_row)
+        if last_row==current_hour:
+            print("Bu veri eklenmis.")
+        else:
+            query_insert_table_hourly="""INSERT into hava_kalitesi(ReadTime, Concentration_PM10, Concentration_SO2, Concentration_O3, Concentration_NO2, Concentration_CO, AQI_PM10, AQI_SO2, AQI_O3, AQI_NO2, AQI_CO, AQI_AQIIndex, AQI_ContaminantParameter, AQI_State, AQI_Color) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
+            record_to_insert_hourly = (hourly_result[0]['ReadTime'], hourly_result[0]['Concentration']['PM10'], hourly_result[0]['Concentration']['SO2'],hourly_result[0]['Concentration']['O3'],
+                                hourly_result[0]['Concentration']['NO2'],hourly_result[0]['Concentration']['CO'],hourly_result[0]['AQI']['PM10'],hourly_result[0]['AQI']['SO2'],
+                                hourly_result[0]['AQI']['O3'], hourly_result[0]['AQI']['NO2'],hourly_result[0]['AQI']['CO'], hourly_result[0]['AQI']['AQIIndex'], hourly_result[0]['AQI']['ContaminantParameter'],
+                                hourly_result[0]['AQI']['State'],hourly_result[0]['AQI']['Color'])
+            cursor.execute(query_insert_table_hourly, record_to_insert_hourly)
+            print("Son veri veri tabanina yazildi.")
+            
+        hourly_result.clear()
+    except Exception as e:
+        print ("SORGU SIRASINDA HATA: " + str(e))    
 
 schedule.every().hour.do(job)
 
