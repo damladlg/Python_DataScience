@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, shrink-to-fit=no"
+    />
+    <link
+      href="https://fonts.googleapis.com/css?family=Roboto:400,100,300,700"
+      rel="stylesheet"
+      type="text/css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/style.css') }}"
+    />
+  </head>
+  <body>
+    <section class="ftco-section">
+      <div class="container">
+        <div class="row justify-content-center">
+          <div class="col-md-6 text-center mb-5">
+            <h2 class="heading-section">Hava Kalitesi Bilgileri</h2>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-12">
+            <div class="table-wrap">
+              <table class="table table-striped">
+                <thead>
+                  <tr>
+                    <th>ReadTime</th>
+                    <th>Concentration_PM10</th>
+                    <th>Concentration_SO2</th>
+                    <th>Concentration_O3</th>
+                    <th>Concentration_NO2</th>
+                    <th>Concentration_CO</th>
+                    <th>AQI_PM10</th>
+                    <th>AQI_SO2</th>
+                    <th>AQI_O3</th>
+                    <th>AQI_NO2</th>
+                    <th>AQI_CO</th>
+                    <th>AQI_AQIIndex</th>
+                    <th>AQI_ContaminantParameter</th>
+                    <th>AQI_Color</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for row in results %}
+                  <tr>
+                    <td>{{row[1]}}</td>
+                    <td>{{row[2]}}</td>
+                    <td>{{row[3]}}</td>
+                    <td>{{row[4]}}</td>
+                    <td>{{row[5]}}</td>
+                    <td>{{row[6]}}</td>
+                    <td>{{row[7]}}</td>
+                    <td>{{row[8]}}</td>
+                    <td>{{row[9]}}</td>
+                    <td>{{row[10]}}</td>
+                    <td>{{row[11]}}</td>
+                    <td>{{row[12]}}</td>
+                    <td>{{row[13]}}</td>
+                    
+                    <td><button class="btn" style="background:{{row[15]}}"></button></td>
+                    <tr><td colspan="6">{{row[14]}}</td></tr>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </body>
+</html>
