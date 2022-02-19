@@ -58,23 +58,26 @@
                   </tr>
                 </thead>
                 <tbody>
+                  {% for row in results %}
                   <tr>
-                    <th scope="row">1001</th>
-                    <td>Mark Otto</td>
-                    <td>Japan</td>
-                    <td>$3000</td>
-                    <td>$1200</td>
-                    <td>Mark Otto</td>
-                    <td>Japan</td>
-                    <td>$3000</td>
-                    <td>$1200</td>
-                    <td>Mark Otto</td>
-                    <td>Japan</td>
-                    <td>$3000</td>
-                    <td>$1200</td>
-                    <td>$1200</td>
-                    <td><a href="#" class="btn btn-success"></a></td>
+                    <td>{{row[1]}}</td>
+                    <td>{{row[2]}}</td>
+                    <td>{{row[3]}}</td>
+                    <td>{{row[4]}}</td>
+                    <td>{{row[5]}}</td>
+                    <td>{{row[6]}}</td>
+                    <td>{{row[7]}}</td>
+                    <td>{{row[8]}}</td>
+                    <td>{{row[9]}}</td>
+                    <td>{{row[10]}}</td>
+                    <td>{{row[11]}}</td>
+                    <td>{{row[12]}}</td>
+                    <td>{{row[13]}}</td>
+                    
+                    <td><button class="btn" style="background:{{row[15]}}"></button></td>
+                    <tr><td colspan="6">{{row[14]}}</td></tr>
                   </tr>
+                  {% endfor %}
                 </tbody>
               </table>
             </div>
