@@ -48,17 +48,6 @@ def form():
         print(e)
         return []
 
-@app.route('/report')
-def report():
-    try:
-        cursor.execute("""SELECT * from hava_kalitesi""")
-        rows = cursor.fetchall()
-
-        return render_template('report.html',  results=rows)
-    except Exception as e:
-        print(e)
-        return []
-
 
 @app.route("/", methods=["GET","POST"])
 def login():

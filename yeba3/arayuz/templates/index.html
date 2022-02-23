@@ -17,26 +17,6 @@
       rel="stylesheet"
     />
     <link
-      href="{{ url_for('static', filename='vendor/boxicons/css/boxicons.min.css') }}"
-      rel="stylesheet"
-    />
-    <link
-      href="{{ url_for('static', filename='vendor/quill/quill.snow.css') }}"
-      rel="stylesheet"
-    />
-    <link
-      href="{{ url_for('static', filename='vendor/quill/quill.bubble.css') }}"
-      rel="stylesheet"
-    />
-    <link
-      href="{{ url_for('static', filename='vendor/remixicon/remixicon.css') }}"
-      rel="stylesheet"
-    />
-    <link
-      href="{{ url_for('static', filename='vendor/simple-datatables/style.css') }}"
-      rel="stylesheet"
-    />
-    <link
       href="{{ url_for('static', filename='css/a.css') }}"
       rel="stylesheet"
     />
@@ -115,28 +95,26 @@
             <div class="card">
               <div class="card-body table-wrap">
                 <h5 class="card-title">Son Okunan Hava Kalitesi</h5>
-
-                <table class="table datatable">
-                  <thead>
-                    <tr>
-                     
+                <table class="table table-bordered spe_table">
+                <thead>
+                  <tr>
                       <th scope="col">ReadTime</th>
-                      <th scope="col">Concentration_PM10</th>
-                      <th scope="col">Concentration_SO2</th>
-                      <th scope="col">Concentration_O3</th>
-                      <th scope="col">Concentration_NO2</th>
-                      <th scope="col">Concentration_CO</th>
-                      <th scope="col">AQI_PM10</th>
-                      <th scope="col">AQI_SO2</th>
-                      <th scope="col">AQI_O3</th>
-                      <th scope="col">AQI_NO2</th>
-                      <th scope="col">AQI_CO</th>
-                      <th scope="col">AQI_AQIIndex</th>
-                      <th scope="col">AQI_ContaminantParameter</th>
-                      <th scope="col">AQI_Color</th>
+                      <th scope="col">Concentration PM10</th>
+                      <th scope="col">Concentration SO2</th>
+                      <th scope="col">Concentration O3</th>
+                      <th scope="col">Concentration NO2</th>
+                      <th scope="col">Concentration CO</th>
+                      <th scope="col">AQI PM10</th>
+                      <th scope="col">AQI SO2</th>
+                      <th scope="col">AQI O3</th>
+                      <th scope="col">AQI NO2</th>
+                      <th scope="col">AQI CO</th>
+                      <th scope="col">AQI AQIIndex</th>
+                      <th scope="col">AQI Contaminant Parameter</th>
+                      <th scope="col">AQI Color</th>
                     </tr>
-                  </thead>
-                  <tbody>
+                </thead>
+                <tbody>
                     {% for row in results %}
                   <tr>
                     <td>{{row[1]}}</td>
@@ -153,11 +131,11 @@
                     <td>{{row[12]}}</td>
                     <td>{{row[13]}}</td>
                     <td><button class="btn" style="background:{{row[15]}}"></button></td>
-                    <tr><td colspan="6">{{row[14]}}</td></tr>
+                    <tr><td colspan="14">{{row[14]}}</td></tr>
                   </tr>
                   {% endfor %}
                   </tbody>
-                </table>
+              </table>
               </div>
             </div>
           </div>
