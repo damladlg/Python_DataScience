@@ -25,6 +25,29 @@ except (Exception, psycopg2.Error) as error:
 db.autocommit = True
 cursor = db.cursor()
 
+
+@app.route("/index")
+def index():
+    try:
+        cursor.execute("""SELECT * FROM hava_kalitesi ORDER BY id DESC LIMIT 1""")
+        rows = cursor.fetchall()
+
+        return render_template('index.html',  results=rows)
+    except Exception as e:
+        print(e)
+        return []
+
+@app.route("/form")
+def form():
+    try:
+        cursor.execute("""SELECT * from hava_kalitesi""")
+        rows = cursor.fetchall()
+
+        return render_template('form.html',  results=rows)
+    except Exception as e:
+        print(e)
+        return []
+
 @app.route('/report')
 def report():
     try:
@@ -37,19 +60,7 @@ def report():
         return []
 
 
-@app.route("/")
-def homepage():
-    try:
-        cursor.execute("""SELECT * FROM hava_kalitesi ORDER BY id DESC LIMIT 1""")
-        rows = cursor.fetchall()
-
-        return render_template('homepage.html',  results=rows)
-    except Exception as e:
-        print(e)
-        return []
-
-
-@app.route("/login", methods=["GET","POST"])
+@app.route("/", methods=["GET","POST"])
 def login():
     cursor.execute("""SELECT * from user_login""")
     rows = cursor.fetchall()
@@ -60,12 +71,10 @@ def login():
         print(request.form['email'])
         if email==request.form['email'] and password==request.form['password']:
             print("email dogru")
-            return redirect(url_for('report'))
+            return redirect(url_for('index'))
         else:
             return redirect(url_for('login'))
-    
     return render_template('login.html',  results=rows)
-
 
 if __name__ == "__main__":
     app.run(debug=True)
