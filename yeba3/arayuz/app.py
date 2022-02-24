@@ -37,16 +37,12 @@ def index():
         print(e)
         return []
 
-@app.route("/form")
+@app.route("/form", methods=["GET","POST"])
 def form():
-    try:
-        cursor.execute("""SELECT * from hava_kalitesi""")
-        rows = cursor.fetchall()
-
-        return render_template('form.html',  results=rows)
-    except Exception as e:
-        print(e)
-        return []
+    if request.method=="POST":
+        print(request.form['end_date'])
+    
+    return render_template('form.html')
 
 
 @app.route("/", methods=["GET","POST"])

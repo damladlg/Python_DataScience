@@ -40,7 +40,7 @@ insert_data=request_to_url(start_date,end_date)
 
 database_name="postgres"
 user_name="postgres"
-password=****
+password="Tamam123"
 host_ip="127.0.0.1"
 host_port="5432"
 
@@ -94,9 +94,21 @@ db.autocommit=True
 cursor=db.cursor()
 cursor.execute(query_create_table)
 
+total=0.0
 try:
     for i in insert_data:
         if i['AQI'] is not None:
+            print(i['ReadTime'])
+            print(i['Concentration']['PM10'])
+            if i['Concentration']['PM10'] is None:
+                i['Concentration']['PM10']=0.0
+            total=total+i['Concentration']['PM10']
+            print(total)
+            if "59:59" in i['ReadTime']: 
+                print("yes")
+                total=0.0
+                
+            
             query_insert_table="""INSERT into hava_kalitesi(ReadTime, Concentration_PM10, Concentration_SO2, Concentration_O3, Concentration_NO2, Concentration_CO, AQI_PM10, AQI_SO2, AQI_O3, AQI_NO2, AQI_CO, AQI_AQIIndex, AQI_ContaminantParameter, AQI_State, AQI_Color) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
             record_to_insert = (i['ReadTime'], i['Concentration']['PM10'], i['Concentration']['SO2'],i['Concentration']['O3'],
                                 i['Concentration']['NO2'],i['Concentration']['CO'],i['AQI']['PM10'],i['AQI']['SO2'],
