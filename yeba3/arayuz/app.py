@@ -40,7 +40,19 @@ def index():
 @app.route("/form", methods=["GET","POST"])
 def form():
     if request.method=="POST":
+        print(request.form['start_date'])
         print(request.form['end_date'])
+        print(request.form['start_time'])
+        print(request.form['end_time'])
+        start_total=request.form['start_date']+"T"+request.form['start_time']+":00"
+        end_total=request.form['end_date']+"T"+request.form['end_time']+":00"
+        print(start_total)
+        print(end_total)
+
+        cursor.execute("""SELECT * FROM hava_kalitesi WHERE ReadTime between %s and %s """, [start_total, end_total])
+        rows = cursor.fetchall()
+        print(rows)
+        return redirect(url_for('index',results=rows))
     
     return render_template('form.html')
 
