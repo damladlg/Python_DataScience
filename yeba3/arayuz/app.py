@@ -2,7 +2,8 @@
 
 import os
 import psycopg2
-from flask import Flask, render_template, request, redirect, url_for
+import flask_excel as excel
+from flask import Flask, render_template, request, redirect, url_for, send_file
 from os.path import exists
 
 app = Flask(__name__)
@@ -25,7 +26,6 @@ except (Exception, psycopg2.Error) as error:
 db.autocommit = True
 cursor = db.cursor()
 
-
 @app.route("/index")
 def index():
     try:
@@ -40,22 +40,25 @@ def index():
 @app.route("/form", methods=["GET","POST"])
 def form():
     if request.method=="POST":
-        print(request.form['start_date'])
-        print(request.form['end_date'])
-        print(request.form['start_time'])
-        print(request.form['end_time'])
         start_total=request.form['start_date']+"T"+request.form['start_time']+":00"
         end_total=request.form['end_date']+"T"+request.form['end_time']+":00"
         print(start_total)
         print(end_total)
-
         cursor.execute("""SELECT * FROM hava_kalitesi WHERE ReadTime between %s and %s """, [start_total, end_total])
         rows = cursor.fetchall()
-        print(rows)
-        return redirect(url_for('index',results=rows))
-    
-    return render_template('form.html')
 
+        if len(rows)!=0:
+            excel.init_excel(app)
+            extension_type = "csv"
+            filename = "hava_kalitesi" + "." + extension_type
+
+            d=[("id","ReadTime","Concentration PM10", "Concentration", "Concentration O3", "Concentration NO2", "Concentration CO",
+            "AQI PM10", "AQI SO2", "AQI O3", "AQI NO2", "AQI CO", "AQI AQIIndex", "AQI Contaminant Parameter", "AQI Color")]
+
+            for row in rows:
+                d.append(row)
+            return excel.make_response_from_array(d, file_type=extension_type, file_name=filename)
+    return render_template('form.html')
 
 @app.route("/", methods=["GET","POST"])
 def login():
