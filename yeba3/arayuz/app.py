@@ -3,7 +3,7 @@
 import os
 import psycopg2
 import flask_excel as excel
-from flask import Flask, render_template, request, redirect, url_for, send_file
+from flask import Flask, render_template, request, redirect, url_for, send_file,session
 from os.path import exists
 
 app = Flask(__name__)
@@ -13,7 +13,6 @@ user_name = "postgres"
 password = "Tamam123"
 host_ip = "127.0.0.1"
 host_port = "5432"
-
 try: 
     db = psycopg2.connect(database=database_name,
                       user=user_name,
@@ -22,7 +21,6 @@ try:
                       port=host_port)
 except (Exception, psycopg2.Error) as error:
     print("Error while fetching data from PostgreSQL", error)
-
 db.autocommit = True
 cursor = db.cursor()
 
@@ -60,20 +58,33 @@ def form():
             return excel.make_response_from_array(d, file_type=extension_type, file_name=filename)
     return render_template('form.html')
 
+class User:
+    def __init__(self, id, email, password):
+        self.id=id
+        self.email=email
+        self.password=password
+    def __repr__(self):
+        return f'<User: {self.email}>'
+
+users=[]
+app.secret_key='secretkeythatonly'
 @app.route("/", methods=["GET","POST"])
 def login():
     cursor.execute("""SELECT * from user_login""")
     rows = cursor.fetchall()
     for row in rows:
-        email=row[1]
-        password=row[2]
+        #email=row[1]
+        #password=row[2]
+        users.append(User(id=row[0], email=row[1], password=row[2]))
     if request.method=="POST":
-        print(request.form['email'])
+        session.pop('user_id', None)
+        email=users[0].email
+        password=users[0].password
         if email==request.form['email'] and password==request.form['password']:
-            print("email dogru")
+            session['user_id']=users[0].id
             return redirect(url_for('index'))
         else:
-            return redirect(url_for('login'))
+             return redirect(url_for('login'))
     return render_template('login.html',  results=rows)
 
 if __name__ == "__main__":
