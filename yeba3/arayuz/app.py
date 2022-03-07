@@ -65,7 +65,7 @@ def form():
                     d.append(row)
                 return excel.make_response_from_array(d, file_type=extension_type, file_name=filename)
     
-    return redirect(url_for('form'))
+    return render_template('form.html')
 
 class User:
     def __init__(self, id, email, password):
