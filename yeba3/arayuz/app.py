@@ -31,18 +31,22 @@ def before_request():
     if 'user' in session:
         g.user = session['user']
 
-@app.route("/index")
+@app.route("/", methods=["GET","POST"])
 def index():
-    if g.user:
-        try:
-            cursor.execute("""SELECT * FROM hava_kalitesi ORDER BY id DESC LIMIT 1""")
-            rows = cursor.fetchall()
-
+    try:
+        cursor.execute("""SELECT * FROM hava_kalitesi ORDER BY id DESC LIMIT 1""")
+        rows = cursor.fetchall()
+        if g.user:
             return render_template('index.html',  results=rows, user=session['user'])
-        except Exception as e:
-            print(e)
-            return []
-    return redirect(url_for('index'))
+        else:
+            if request.method=="POST":
+                return redirect(url_for('login'))
+            else:
+                return render_template('index.html',results=rows)
+    except Exception as e:
+        print(e)
+        return []
+        
 
 @app.route("/form", methods=["GET","POST"])
 def form():
@@ -77,7 +81,7 @@ class User:
 
 users=[]
 
-@app.route("/", methods=["GET","POST"])
+@app.route("/login", methods=["GET","POST"])
 def login():
     cursor.execute("""SELECT * from user_login""")
     rows = cursor.fetchall()
