@@ -59,6 +59,7 @@ def index():
 
 @app.route("/form", methods=["GET","POST"])
 def form():
+    messages=" "
     form = InfoForm()
     if g.user:
         if form.validate_on_submit():
@@ -67,6 +68,7 @@ def form():
             cursor.execute("""SELECT * FROM hava_kalitesi WHERE ReadTime between %s and %s """, [start_total, end_total])
             rows = cursor.fetchall()
             if len(rows)!=0:
+                messages="Rapor basarı ile çıktı."
                 excel.init_excel(app)
                 extension_type = "csv"
                 filename = "hava_kalitesi" + "." + extension_type
@@ -77,8 +79,10 @@ def form():
                 for row in rows:
                     d.append(row)
                 return excel.make_response_from_array(d, file_type=extension_type, file_name=filename)
-    
-    return render_template('form.html', user=session['user'], form=form)
+            else:
+                messages="Geçerli tarih giriniz."
+        return render_template('form.html', user=session['user'], form=form, messages=messages)
+    return render_template('form.html', user=session['user'], form=form, messages=messages)
 
 class User:
     def __init__(self, id, email, password):
