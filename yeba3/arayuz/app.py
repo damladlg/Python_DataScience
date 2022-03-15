@@ -1,10 +1,13 @@
 #from crypt import methods
-
 import os
 import psycopg2
 import flask_excel as excel
 from flask import Flask, render_template, request, redirect, url_for, send_file,session, g
 from os.path import exists
+from flask_wtf import FlaskForm
+from wtforms.fields import DateField, TimeField
+from wtforms.validators import DataRequired
+from wtforms import validators, SubmitField
 
 app = Flask(__name__)
 app.secret_key=os.urandom(24)
@@ -24,6 +27,13 @@ except (Exception, psycopg2.Error) as error:
     print("Error while fetching data from PostgreSQL", error)
 db.autocommit = True
 cursor = db.cursor()
+
+class InfoForm(FlaskForm):
+    startdate = DateField('Başlangıç Tarihi', format='%Y-%m-%d', validators=(validators.DataRequired(),))
+    enddate = DateField('Bitiş Tarihi', format='%Y-%m-%d', validators=(validators.DataRequired(),))
+    starttime = TimeField('Başlangıç Saati', validators=(validators.DataRequired(),))
+    endtime = TimeField('Bitiş Saati', validators=(validators.DataRequired(),))
+    submit = SubmitField('Rapor Oluştur')
 
 @app.before_request
 def before_request():
@@ -46,17 +56,16 @@ def index():
     except Exception as e:
         print(e)
         return []
-        
 
 @app.route("/form", methods=["GET","POST"])
 def form():
+    form = InfoForm()
     if g.user:
-        if request.method=="POST":
-            start_total=request.form['start_date']+"T"+request.form['start_time']+":00"
-            end_total=request.form['end_date']+"T"+request.form['end_time']+":00"
+        if form.validate_on_submit():
+            start_total=str(form.startdate.data)+"T"+str(form.starttime.data)+"Z"
+            end_total=str(form.enddate.data)+"T"+str(form.endtime.data)+"Z"
             cursor.execute("""SELECT * FROM hava_kalitesi WHERE ReadTime between %s and %s """, [start_total, end_total])
             rows = cursor.fetchall()
-
             if len(rows)!=0:
                 excel.init_excel(app)
                 extension_type = "csv"
@@ -69,7 +78,7 @@ def form():
                     d.append(row)
                 return excel.make_response_from_array(d, file_type=extension_type, file_name=filename)
     
-    return render_template('form.html', user=session['user'])
+    return render_template('form.html', user=session['user'], form=form)
 
 class User:
     def __init__(self, id, email, password):
@@ -85,10 +94,12 @@ users=[]
 def login():
     cursor.execute("""SELECT * from user_login""")
     rows = cursor.fetchall()
+    print(rows)
     for row in rows:
         #email=row[1]
         #password=row[2]
         users.append(User(id=row[0], email=row[1], password=row[2]))
+    print(users)
     if request.method=="POST":
         session.pop('user', None)
         email=users[0].email

@@ -97,39 +97,35 @@
               <h5 class="card-title">Rapor Seçenekleri</h5>
               <form method="POST">
                 <div class="row mb-3">
-                  <label for="inputDate" class="col-sm-2 col-form-label"
-                    >Başlangıç Tarihi</label
-                  >
-                  <div class="col-sm-10">
-                    <input type="date" name="start_date" class="form-control" />
+                  <div class="col-sm-2 col-form-label">
+                    {{ form.csrt_token }}
+                    {{ form.startdate.label }} {{form.startdate(class='datepicker')}} {{form.hidden_tag()}}
                   </div>
                 </div>
                 <div class="row mb-3">
-                  <label for="inputTime" class="col-sm-2 col-form-label">Başlangıç Saati</label>
-                  <div class="col-sm-10">
-                    <input type="time" name="start_time" class="form-control">
+                 <div class="col-sm-2 col-form-label">
+                    {{ form.csrt_token }}
+                    {{ form.starttime.label }} {{form.starttime(class='timepicker')}} {{form.hidden_tag()}}
                   </div>
                 </div>
                 <div class="row mb-3">
-                  <label for="inputDate" class="col-sm-2 col-form-label"
-                    >Bitiş Tarihi</label
-                  >
-                  <div class="col-sm-10">
-                    <input type="date" name="end_date" class="form-control" />
+                  <div class="col-sm-2 col-form-label">
+                    {{ form.csrt_token }}
+                    {{ form.enddate.label }} {{form.enddate(class='datepicker')}} {{form.hidden_tag()}}
                   </div>
                 </div>
                 <div class="row mb-3">
-                  <label for="inputTime" class="col-sm-2 col-form-label">Bitiş Saati</label>
-                  <div class="col-sm-10">
-                    <input type="time" name="end_time" class="form-control">
+                  <div class="col-sm-2 col-form-label">
+                    {{ form.csrt_token }}
+                    {{ form.endtime.label }} {{form.endtime(class='timepicker')}} {{form.hidden_tag()}}
                   </div>
                 </div>
 
                 <div class="row mb-3">
                   <div class="col-sm-10">
-                    <button type="submit" class="btn btn-primary">
-                      Rapor Oluştur
-                    </button>
+                    <div class=" ">
+                      {{form.submit()}}
+                    </div>
                   </div>
                 </div>
               </form>
