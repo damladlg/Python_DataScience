@@ -88,7 +88,6 @@ CREATE TABLE IF NOT EXISTS hava_kalitesi(
     AQI_State TEXT,
     AQI_Color TEXT
     )
-
 """
 db.autocommit=True
 cursor=db.cursor()
