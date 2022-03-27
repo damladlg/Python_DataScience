@@ -1,6 +1,7 @@
 import psycopg2
 import pandas as pd
 import psycopg2.extras as extras
+from datetime import datetime, timedelta
 
 database_name="web_service_db"
 user_name="postgres"
@@ -15,7 +16,17 @@ db=psycopg2.connect(database=database_name,
                     port=host_port)
 cursor = db.cursor()
 
-cursor.execute("""SELECT pm2_5_ugpm3, PM4_ugpm3, PM10_ugpm3, Pressure, Temperature, Humidity, NO2, O3, time FROM hava_kalitesi""")
+now=datetime.now()
+now_date_string = now.strftime("%Y-%m-%d")
+now_time_string = now.strftime("%H:%M:%S")
+now=now_date_string+"T"+now_time_string+"Z"
+
+one_hour_ago=datetime.now() - timedelta(hours = 1)
+one_hour_ago_date_string = one_hour_ago.strftime("%Y-%m-%d")
+one_hour_ago_time_string = one_hour_ago.strftime("%H:%M:%S")
+one_hour_ago=one_hour_ago_date_string+"T"+one_hour_ago_time_string+"Z"
+
+cursor.execute("""SELECT pm2_5_ugpm3, PM4_ugpm3, PM10_ugpm3, Pressure, Temperature, Humidity, NO2, O3, time FROM hava_kalitesi WHERE time between %s and %s""", [one_hour_ago, now])
 rows = cursor.fetchall()
 
 df = pd.DataFrame(rows, columns=["pm2_5_ugpm3_avg", "PM4_ugpm3_avg", "PM10_ugpm3_avg", "Pressure_avg", "Temperature_avg", "Humidity_avg", "NO2_avg", "O3_avg", "time"])
@@ -79,8 +90,8 @@ def execute_values(conn, df, table):
     print("Veri tabanına eklendi.")
     cursor.close()
 
-execute_values(db, df_daily_avg, table1)
-execute_values(db, df_hourly_avg, table2)
+#execute_values(db, df_daily_avg, table1)
+#execute_values(db, df_hourly_avg, table2)
 
 
 
