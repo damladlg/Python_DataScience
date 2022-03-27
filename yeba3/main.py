@@ -37,7 +37,7 @@ def request_to_url(start_date,end_date):
 start_date="01.02.2022%2000:00:00"
 end_date="02.02.2022%2000:00:00"      
 insert_data=request_to_url(start_date,end_date)
-
+print(insert_data)
 database_name="postgres"
 user_name="postgres"
 password="Tamam123"

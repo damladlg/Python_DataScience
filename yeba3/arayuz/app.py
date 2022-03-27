@@ -1,11 +1,12 @@
 #from crypt import methods
 import os
+from random import choices
 import psycopg2
 import flask_excel as excel
 from flask import Flask, render_template, request, redirect, url_for, send_file,session, g
 from os.path import exists
 from flask_wtf import FlaskForm
-from wtforms.fields import DateField, TimeField
+from wtforms.fields import DateField, TimeField, SelectField
 from wtforms.validators import DataRequired
 from wtforms import validators, SubmitField
 
@@ -33,6 +34,7 @@ class InfoForm(FlaskForm):
     enddate = DateField('Bitiş Tarihi', format='%Y-%m-%d', validators=(validators.DataRequired(),))
     starttime = TimeField('Başlangıç Saati', validators=(validators.DataRequired(),))
     endtime = TimeField('Bitiş Saati', validators=(validators.DataRequired(),))
+    report = SelectField('Rapor Tipi', choices=[('1', 'Tüm Veriler'), ('2', 'Saatlik Ortalama Verileri'), ('3', 'Günlük Ortalama Verileri')])
     submit = SubmitField('Rapor Oluştur')
 
 @app.before_request

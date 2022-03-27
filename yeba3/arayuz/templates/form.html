@@ -95,6 +95,12 @@
             <div class="card-body">
               <h5 class="card-title">Rapor Seçenekleri</h5>
               <form method="POST">
+              <div class="row mb-3">
+                  <div class="col-sm-2 col-form-label">
+                    {{ form.csrt_token }}
+                    {{ form.report.label }} {{form.report}} {{form.hidden_tag()}}
+                  </div>
+                </div>
                 <div class="row mb-3">
                   <div class="col-sm-2 col-form-label">
                     {{ form.csrt_token }}
