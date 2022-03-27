@@ -67,16 +67,33 @@ def form():
         if form.validate_on_submit():
             start_total=str(form.startdate.data)+"T"+str(form.starttime.data)+"Z"
             end_total=str(form.enddate.data)+"T"+str(form.endtime.data)+"Z"
-            cursor.execute("""SELECT * FROM hava_kalitesi WHERE ReadTime between %s and %s """, [start_total, end_total])
+            report_type= str(form.report.data)
+            print(report_type)
+            print(type(report_type))
+            if report_type=='1':
+                d=[("id","ReadTime","Concentration PM10", "Concentration", "Concentration O3", "Concentration NO2", "Concentration CO",
+                "AQI PM10", "AQI SO2", "AQI O3", "AQI NO2", "AQI CO", "AQI AQIIndex", "AQI Contaminant Parameter", "AQI Color")]
+                cursor.execute("""SELECT * FROM hava_kalitesi WHERE ReadTime between %s and %s """, [start_total, end_total])
+
+            elif report_type == "2":
+                start_total=str(form.startdate.data)+" "+str(form.starttime.data)
+                end_total=str(form.enddate.data)+" "+str(form.endtime.data)
+                d=[("id","date_time" , "PM2_5_ugpm3_avg", "PM4_ugpm3_avg" ,"PM10_ugpm3_avg" ,"Pressure_avg" ,"Temperature_avg" ,"Humidity_avg" ,"NO2_avg" ,"O3_avg")]
+                cursor.execute("""SELECT * FROM hava_kalitesi_saatlik_ortalama WHERE date_time between %s and %s """, [start_total, end_total])
+
+            elif report_type == "3":
+                start_total=str(form.startdate.data)+" "+str(form.starttime.data)
+                end_total=str(form.enddate.data)+"T"+str(form.endtime.data)+"Z"
+                d=[("id","date_time" , "PM2_5_ugpm3_avg", "PM4_ugpm3_avg" ,"PM10_ugpm3_avg" ,"Pressure_avg" ,"Temperature_avg" ,"Humidity_avg" ,"NO2_avg" ,"O3_avg")]
+                cursor.execute("""SELECT * FROM hava_kalitesi_gunluk_ortalama WHERE date_time between %s and %s """, [start_total, end_total])
+
             rows = cursor.fetchall()
+            print(rows)
             if len(rows)!=0:
                 messages="Rapor basarı ile çıktı."
                 excel.init_excel(app)
                 extension_type = "csv"
                 filename = "hava_kalitesi" + "." + extension_type
-
-                d=[("id","ReadTime","Concentration PM10", "Concentration", "Concentration O3", "Concentration NO2", "Concentration CO",
-                "AQI PM10", "AQI SO2", "AQI O3", "AQI NO2", "AQI CO", "AQI AQIIndex", "AQI Contaminant Parameter", "AQI Color")]
 
                 for row in rows:
                     d.append(row)
