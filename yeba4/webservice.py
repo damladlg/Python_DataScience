@@ -5,6 +5,7 @@ import psycopg2
 from datetime import datetime, timedelta
 import schedule
 import time
+import pandas as pd
 from requests.exceptions import HTTPError
 
 def request_to_url():
@@ -98,7 +99,85 @@ db.autocommit=True
 cursor=db.cursor()
 cursor.execute(query_create_table)
 
-def job():
+def query_to_df(rows):
+    df = pd.DataFrame(rows, columns=["pm2_5_ugpm3_avg", "PM4_ugpm3_avg", "PM10_ugpm3_avg", "Pressure_avg", "Temperature_avg", "Humidity_avg", "NO2_avg", "O3_avg", "time"])
+    df['time'] = pd.to_datetime(df['time'], errors='coerce')
+    df['time'] = df['time'].dt.strftime('%m-%d-%Y %H:%M:%S')
+    df.index = pd.to_datetime(df['time'])
+
+    # Range disinda olan verileri at PM
+    print("PM2.5 1000 uzeri olanlar:")
+    print(len(df[df['pm2_5_ugpm3_avg'] > 1000]))
+                
+    df = df[df['pm2_5_ugpm3_avg'] < 1000] 
+
+    print("PM2.5 sıfırın altında olanlar:")
+    print(len(df[df['pm2_5_ugpm3_avg'] < 0]))
+    df = df[df['pm2_5_ugpm3_avg'] > 0]
+
+    # Range disinda olan verileri at O3
+    print("O3 200 uzeri olanlar:")
+    print(len(df[df['O3_avg'] > 200]))
+    df = df[df['O3_avg'] < 200]
+
+    print("O3 sıfırın altında olanlar:")
+    print(len(df[df['O3_avg'] < 0]))
+    df = df[df['O3_avg'] > 0]
+
+    # Range disinda olan verileri at NO2
+    print("NO2 200 uzeri olanlar:")
+    print(len(df[df['NO2_avg'] > 200]))
+    df = df[df['NO2_avg'] < 200]
+
+    print("NO2 sıfırın altında olanlar:")
+    print(len(df[df['NO2_avg'] < 0]))
+    df = df[df['NO2_avg'] > 0]
+    
+    return df
+
+def job_hourly_avg():
+    now=datetime.now()
+    now_date_string = now.strftime("%Y-%m-%d")
+    now_time_string = now.strftime("%H:%M:%S")
+    now=now_date_string+"T"+now_time_string+"Z"
+
+    one_hour_ago=datetime.now() - timedelta(hours = 1)
+    one_hour_ago_date_string = one_hour_ago.strftime("%Y-%m-%d")
+    one_hour_ago_time_string = one_hour_ago.strftime("%H:%M:%S")
+
+    if now_time_string=="00:00:00": #00:00 da 1 saat öncesini alınca day değeri bir önceki gün olması gerektiği için, yoksa yeni günün day ını alıyor
+        one_hour_ago_date_string=(datetime.now() - timedelta(days = 1)).strftime("%Y-%m-%d")
+        one_hour_ago=one_hour_ago_date_string+"T"+one_hour_ago_time_string+"Z"
+    else:
+        one_hour_ago=one_hour_ago_date_string+"T"+one_hour_ago_time_string+"Z"
+                
+    #saatlik ortalama bulmak için sorgu ile 1 saatlik aralık geliyor 
+    cursor.execute("""SELECT pm2_5_ugpm3, PM4_ugpm3, PM10_ugpm3, Pressure, Temperature, Humidity, NO2, O3, time FROM hava_kalitesi WHERE time between %s and %s""", [one_hour_ago, now])
+    query_hourly_rows = cursor.fetchall()
+    
+    dataframe=query_to_df(query_hourly_rows)
+    
+    df_hourly_avg = dataframe.resample('H').mean()
+    df_hourly_avg['Date_time'] = df_hourly_avg.index
+    df_hourly_avg=df_hourly_avg.head(1)
+    print(df_hourly_avg)
+
+def job_daily_avg():
+    now = datetime.now().strftime("%Y-%m-%d")+"T"+datetime.now().strftime("%H:%M:%S")+"Z"
+    one_day_ago=datetime.now() - timedelta(days = 1)
+    one_day_ago = one_day_ago.strftime("%Y-%m-%d")+"T"+one_day_ago.strftime("%H:%M:%S")+"Z"
+                
+    cursor.execute("""SELECT pm2_5_ugpm3, PM4_ugpm3, PM10_ugpm3, Pressure, Temperature, Humidity, NO2, O3, time FROM hava_kalitesi WHERE time between %s and %s""", [one_day_ago, now])
+    query_daily_rows = cursor.fetchall()
+    
+    dataframe=query_to_df(query_daily_rows)
+    
+    df_daily_avg = dataframe.resample('D').mean()
+    df_daily_avg['Date_time'] = df_daily_avg.index
+    df_daily_avg=df_daily_avg.head(1)
+    print(df_daily_avg)
+
+def job_seconds_data():
     try:
         insert_data=request_to_url()
         try:
@@ -120,7 +199,9 @@ def job():
     except Exception as e:
         print ("SORGU SIRASINDA HATA: " + str(e))    
 
-schedule.every().seconds.do(job)
+schedule.every().seconds.do(job_seconds_data)
+schedule.every().hours.do(job_hourly_avg)
+schedule.every().day.at("00:00").do(job_daily_avg)
 
 while True:
     schedule.run_pending()
