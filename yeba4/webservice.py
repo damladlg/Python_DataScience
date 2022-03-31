@@ -7,6 +7,7 @@ import schedule
 import time
 import pandas as pd
 from requests.exceptions import HTTPError
+import psycopg2.extras as extras
 
 def request_to_url():
     payload = {}
@@ -32,7 +33,7 @@ def request_to_url():
 
 database_name="postgres"
 user_name="postgres"
-password=""
+password="Tamam123"
 host_ip="127.0.0.1"
 host_port="5432"
 
