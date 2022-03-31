@@ -32,7 +32,7 @@ def request_to_url():
 
 database_name="postgres"
 user_name="postgres"
-password="Tamam123"
+password=""
 host_ip="127.0.0.1"
 host_port="5432"
 
@@ -135,6 +135,25 @@ def query_to_df(rows):
     
     return df
 
+def execute_values(conn, df, table):
+  
+    tuples = [tuple(x) for x in df.to_numpy()]
+  
+    cols = ','.join(list(df.columns))
+  
+    query = "INSERT INTO %s(%s) VALUES %%s" % (table, cols)
+    cursor = conn.cursor()
+    try:
+        extras.execute_values(cursor, query, tuples)
+        conn.commit()
+    except (Exception, psycopg2.DatabaseError) as error:
+        print("Error: %s" % error)
+        conn.rollback()
+        cursor.close()
+        return 1
+    print("Veri tabanına eklendi.")
+    cursor.close()
+
 def job_hourly_avg():
     now=datetime.now()
     now_date_string = now.strftime("%Y-%m-%d")
@@ -160,6 +179,9 @@ def job_hourly_avg():
     df_hourly_avg = dataframe.resample('H').mean()
     df_hourly_avg['Date_time'] = df_hourly_avg.index
     df_hourly_avg=df_hourly_avg.head(1)
+    
+    execute_values(db, df_hourly_avg, "hava_kalitesi_saatlik_ortalama")
+    
     print(df_hourly_avg)
 
 def job_daily_avg():
@@ -175,6 +197,9 @@ def job_daily_avg():
     df_daily_avg = dataframe.resample('D').mean()
     df_daily_avg['Date_time'] = df_daily_avg.index
     df_daily_avg=df_daily_avg.head(1)
+    
+    execute_values(db, df_daily_avg, "hava_kalitesi_gunluk_ortalama")
+    
     print(df_daily_avg)
 
 def job_seconds_data():
